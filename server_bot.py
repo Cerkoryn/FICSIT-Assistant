@@ -11,7 +11,9 @@ vm_name = "satisfactory-server"     # CHANGE ME
 
 # Set up the Discord bot with an API key stored in an environment variable
 discord_api_key=os.environ["SatisfactoryBotAPIKey"]
-bot=discord.Client()
+intents = discord.Intents.default()
+intents.message_content = True
+bot=discord.Client(intents=intents)
 
 # Set up the Google Cloud credentials using the JSON key file
 gcp_credentials = service_account.Credentials.from_service_account_file(key_file)
@@ -42,13 +44,13 @@ async def stop_server(channel):
         await channel.send(f"An error occurred while stopping the VM: {e}")
         await channel.send(f"Response\n```json\n{stop_response}```")
 
-@tasks.loop(minutes = 1.0)
+@tasks.loop(minutes = 60.0)
 async def runLoop():
     global hours
     if hours == 1:
-        await runLoop.channel.send(f"@everyone Server has been running for {hours} hour.\nDon't forget to do `!stop` when you're finished to avoid incurring extra charges.")
+        await runLoop.channel.send(f"@everyone Server has been running for {hours} hour.\nDon't forget to do `/stop` when you're finished to avoid incurring extra charges.")
     elif hours >= 2:
-        await runLoop.channel.send(f"@everyone Server has been running for {hours} hours.\nDon't forget to do `!stop` when you're finished to avoid incurring extra charges.")
+        await runLoop.channel.send(f"@everyone Server has been running for {hours} hours.\nDon't forget to do `/stop` when you're finished to avoid incurring extra charges.")
     hours += 1
 
 @bot.event
@@ -59,16 +61,16 @@ async def on_message(message):
     if len(message.content) < 1:
         return
     splitMessage=message.content.split()
-    if splitMessage[0].lower() == "!start":
+    if splitMessage[0].lower() == "/start":
         global hours
         hours = 0
         await start_server(channel)
         runLoop.channel = channel
         runLoop.start()
-    elif splitMessage[0].lower() == "!stop":
+    elif splitMessage[0].lower() == "/stop":
         await stop_server(channel)
         runLoop.stop()
-    elif splitMessage[0][0] == '!':
+    elif splitMessage[0][0] == '/':
         await channel.send(f"ERROR: Invalid command.")
 
 @bot.event
