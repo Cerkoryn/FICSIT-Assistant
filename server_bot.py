@@ -60,6 +60,8 @@ async def on_message(message):
         return
     splitMessage=message.content.split()
     if splitMessage[0].lower() == "!start":
+        global hours
+        hours = 0
         await start_server(channel)
         runLoop.start(channel)
     elif splitMessage[0].lower() == "!stop":
