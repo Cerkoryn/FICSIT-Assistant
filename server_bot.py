@@ -42,20 +42,20 @@ async def stop_server(channel):
         await channel.send(f"An error occurred while stopping the VM: {e}")
         await channel.send(f"Response\n```json\n{stop_response}```")
 
-@tasks.loop(minutes = 60.0)
-async def runLoop(channel):
+@tasks.loop(minutes = 1.0)
+async def runLoop():
     global hours
     if hours == 1:
-        await channel.send(f"@everyone Server has been running for {hours} hour.\nDon't forget to do `!stop` when you're finished to avoid incurring extra charges.")
+        await runLoop.channel.send(f"@everyone Server has been running for {hours} hour.\nDon't forget to do `!stop` when you're finished to avoid incurring extra charges.")
     elif hours >= 2:
-        await channel.send(f"@everyone Server has been running for {hours} hours.\nDon't forget to do `!stop` when you're finished to avoid incurring extra charges.")
+        await runLoop.channel.send(f"@everyone Server has been running for {hours} hours.\nDon't forget to do `!stop` when you're finished to avoid incurring extra charges.")
     hours += 1
 
 @bot.event
 async def on_message(message):
     channel = message.channel
-    if message.channel.id != 1096994664353120349:
-        return
+    #if message.channel.id != 1096994664353120349:  # If you want the bot in only a single channel, uncomment this and put the channel_id here.
+    #    return
     if len(message.content) < 1:
         return
     splitMessage=message.content.split()
@@ -63,10 +63,11 @@ async def on_message(message):
         global hours
         hours = 0
         await start_server(channel)
-        runLoop.start(channel)
+        runLoop.channel = channel
+        runLoop.start()
     elif splitMessage[0].lower() == "!stop":
         await stop_server(channel)
-        runLoop.stop(channel)
+        runLoop.stop()
     elif splitMessage[0][0] == '!':
         await channel.send(f"ERROR: Invalid command.")
 
